@@ -70,7 +70,8 @@ public class AudioEncoder {
         eosSentToAudioEncoder = false;
         stopReceived = false;
 //        File f = FileUtils.createTempFileInRootAppStorage(c, "test_" + new Date().getTime() + ".m4a");
-        File f = new File(c.getExternalFilesDir(null), "test_" + new Date().getTime() + ".m4a");
+//        File f = new File(c.getExternalFilesDir(null), "test_" + new Date().getTime() + ".m4a");
+        File f = new File(c.getExternalFilesDir(null), "test.m4a");
         Toast.makeText(c, "Saving audio to: " + f.getAbsolutePath(), Toast.LENGTH_LONG).show();
 
         mAudioBufferInfo = new MediaCodec.BufferInfo();

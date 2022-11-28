@@ -1,10 +1,15 @@
 package net.openwatch.hwencoderexperiments;
 
+import android.Manifest;
 import android.app.Activity;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+
+import java.util.List;
 
 public class HWRecorderActivity extends Activity {
     private static final String TAG = "CameraToMpegTest";
@@ -15,7 +20,7 @@ public class HWRecorderActivity extends Activity {
 
     Button recordButton;
 
-    protected void onCreate (Bundle savedInstanceState){
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getActionBar().setTitle("");
         setContentView(R.layout.activity_hwrecorder);
@@ -39,13 +44,41 @@ public class HWRecorderActivity extends Activity {
         */
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_CODE) {
+            boolean allGranted = true;
+            for (int grantResult :
+                    grantResults) {
+                if (grantResult != PackageManager.PERMISSION_GRANTED) {
+                    allGranted = false;
+                    break;
+                }
+            }
+            if (allGranted) {
+                recordLogic();
+            }
+        }
+    }
 
-    public void onRecordButtonClick(View v){
+    private static final int REQUEST_CODE = 1;
+
+    public void onRecordButtonClick(View v) {
+        List<String> withoutPermissions = PermissionHelper.checkWithoutPermissions(this, Manifest.permission.RECORD_AUDIO);
+        if (!ContainerUtil.isEmpty(withoutPermissions)) {
+            PermissionHelper.requestPermissions(this, REQUEST_CODE, Manifest.permission.RECORD_AUDIO);
+            return;
+        }
+        recordLogic();
+    }
+
+    private void recordLogic() {
         recording = !recording;
 
         Log.i(TAG, "Record button hit. Start: " + String.valueOf(recording));
 
-        if(recording){
+        if (recording) {
             recordButton.setText(R.string.stop_recording);
 
             mEncoder = new AudioEncoder(getApplicationContext());
@@ -53,23 +86,23 @@ public class HWRecorderActivity extends Activity {
             audioPoller.setAudioEncoder(mEncoder);
             mEncoder.setAudioSoftwarePoller(audioPoller);
             audioPoller.startPolling();
-        }else{
+        } else {
             recordButton.setText(R.string.start_recording);
-            if(mEncoder != null){
+            if (mEncoder != null) {
                 audioPoller.stopPolling();
                 mEncoder.stop();
             }
         }
-
     }
 
     static byte[] audioData;
-    private static byte[] getSimulatedAudioInput(){
+
+    private static byte[] getSimulatedAudioInput() {
         int magnitude = 10;
-        if(audioData == null){
+        if (audioData == null) {
             //audioData = new byte[1024];
             audioData = new byte[1470]; // this is roughly equal to the audio expected between 30 fps frames
-            for(int x=0; x<audioData.length - 1; x++){
+            for (int x = 0; x < audioData.length - 1; x++) {
                 audioData[x] = (byte) (magnitude * Math.sin(x));
             }
             Log.i(TAG, "generated simulated audio data");
