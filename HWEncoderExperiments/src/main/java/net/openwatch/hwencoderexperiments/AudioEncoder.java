@@ -50,7 +50,11 @@ public class AudioEncoder {
 
     public AudioEncoder(Context c) {
         this.c = c;
-        prepare();
+        try {
+            prepare();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void setAudioSoftwarePoller(AudioSoftwarePoller audioSoftwarePoller){
@@ -58,14 +62,15 @@ public class AudioEncoder {
     }
 
 
-    private void prepare() {
+    private void prepare() throws IOException {
         audioBytesReceived = 0;
         numTracksAdded = 0;
         frameCount = 0;
         eosReceived = false;
         eosSentToAudioEncoder = false;
         stopReceived = false;
-        File f = FileUtils.createTempFileInRootAppStorage(c, "test_" + new Date().getTime() + ".m4a");
+//        File f = FileUtils.createTempFileInRootAppStorage(c, "test_" + new Date().getTime() + ".m4a");
+        File f = new File(c.getExternalFilesDir(null), "test_" + new Date().getTime() + ".m4a");
         Toast.makeText(c, "Saving audio to: " + f.getAbsolutePath(), Toast.LENGTH_LONG).show();
 
         mAudioBufferInfo = new MediaCodec.BufferInfo();
@@ -167,7 +172,11 @@ public class AudioEncoder {
                 eosSentToAudioEncoder = true;
                 if (!stopReceived) {
                     // swap encoder
-                    prepare();
+                    try {
+                        prepare();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 } else {
                     Log.i(TAG, "Stopping Encoding Service");
                     encodingService.shutdown();
