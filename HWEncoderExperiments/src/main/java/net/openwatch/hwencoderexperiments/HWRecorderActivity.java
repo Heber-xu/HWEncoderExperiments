@@ -1,9 +1,14 @@
 package net.openwatch.hwencoderexperiments;
 
+import android.Manifest;
 import android.app.Activity;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.view.View;
 import android.widget.Button;
+
+import java.util.List;
 
 public class HWRecorderActivity extends Activity {
     private static final String TAG = "CameraToMpegTest";
@@ -12,39 +17,71 @@ public class HWRecorderActivity extends Activity {
 
     //GLSurfaceView glSurfaceView;
     //GlSurfaceViewRenderer glSurfaceViewRenderer = new GlSurfaceViewRenderer();
+    Button btnRecord;
 
-    protected void onCreate (Bundle savedInstanceState){
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_hwrecorder);
         //glSurfaceView = (GLSurfaceView) findViewById(R.id.glSurfaceView);
         //glSurfaceView.setRenderer(glSurfaceViewRenderer);
+        btnRecord = findViewById(R.id.btnRecord);
     }
 
     @Override
-    public void onPause(){
+    public void onPause() {
         super.onPause();
         //glSurfaceView.onPause();
     }
 
     @Override
-    public void onResume(){
+    public void onResume() {
         super.onResume();
         //glSurfaceView.onResume();
     }
 
-    public void onRunTestButtonClicked(View v){
-        if(!recording){
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_CODE) {
+            boolean allGranted = true;
+            for (int grantResult :
+                    grantResults) {
+                if (grantResult != PackageManager.PERMISSION_GRANTED) {
+                    allGranted = false;
+                    break;
+                }
+            }
+            if (allGranted) {
+                recordLogic();
+            }
+        }
+    }
+
+    private static final int REQUEST_CODE = 1;
+
+    public void onRunTestButtonClicked(View v) {
+        String[] permissions = {Manifest.permission.RECORD_AUDIO, Manifest.permission.CAMERA};
+        List<String> withoutPermissions = PermissionHelper.checkWithoutPermissions(this, permissions);
+        if (!ContainerUtil.isEmpty(withoutPermissions)) {
+            PermissionHelper.requestPermissions(this, REQUEST_CODE, permissions);
+            return;
+        }
+        recordLogic();
+    }
+
+    private void recordLogic() {
+        if (!recording) {
             try {
                 startChunkedHWRecorder();
                 recording = true;
-                ((Button) v).setText("Stop Recording");
+                btnRecord.setText("Stop Recording");
             } catch (Throwable throwable) {
                 throwable.printStackTrace();
             }
-        }else{
+        } else {
             chunkedHWRecorder.stopRecording();
             recording = false;
-            ((Button) v).setText("Start Recording");
+            btnRecord.setText("Start Recording");
         }
     }
 
